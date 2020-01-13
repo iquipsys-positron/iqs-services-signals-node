@@ -1,6 +1,6 @@
 {
     "name": "iqs-services-signals-node",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "author": "Conceptual Vision Consulting LLC",
     "description": "Operational signals microservice in Node.js",
     "contributors": [
@@ -44,7 +44,8 @@
         "pip-services3-data-node": "^3.0.0",
         "pip-services3-aws-node": "^3.0.0",
         "pip-services3-rpc-node": "^3.0.0",
-        "pip-services3-mongodb-node": "^3.0.0"
+        "pip-services3-mongodb-node": "^3.0.0",
+        "iqs-clients-mqttgateway-node": "^1.0.0"
     },
     "devDependencies": {
         "@types/node": "*",

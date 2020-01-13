@@ -13,6 +13,7 @@ export declare class SignalsController implements IConfigurable, IReferenceable,
     private static _defaultConfig;
     private _dependencyResolver;
     private _persistence;
+    private _mqttGatewayClient;
     private _commandSet;
     private _lockDuration;
     configure(config: ConfigParams): void;

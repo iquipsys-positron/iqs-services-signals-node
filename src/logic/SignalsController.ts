@@ -15,7 +15,7 @@ import { CommandSet } from 'pip-services3-commons-node';
 import { DateTimeConverter } from 'pip-services3-commons-node';
 import { AnyValueMap } from 'pip-services3-commons-node';
 
-//!!import { IMqttGatewayClientV1 } from 'iqs-clients-mqttgateway-node';
+import { IMqttGatewayClientV1 } from 'iqs-clients-mqttgateway-node';
 
 import { SignalV1 } from '../data/version1/SignalV1';
 import { ISignalsPersistence } from '../persistence/ISignalsPersistence';
@@ -30,7 +30,7 @@ export class SignalsController implements  IConfigurable, IReferenceable, IComma
 
     private _dependencyResolver: DependencyResolver = new DependencyResolver(SignalsController._defaultConfig);
     private _persistence: ISignalsPersistence;
-    //!!private _mqttGatewayClient: IMqttGatewayClientV1;
+    private _mqttGatewayClient: IMqttGatewayClientV1;
     private _commandSet: SignalsCommandSet;
     private _lockDuration: number = 5000;
 
@@ -42,7 +42,7 @@ export class SignalsController implements  IConfigurable, IReferenceable, IComma
     public setReferences(references: IReferences): void {
         this._dependencyResolver.setReferences(references);
         this._persistence = this._dependencyResolver.getOneRequired<ISignalsPersistence>('persistence');
-        //!!this._mqttGatewayClient = this._dependencyResolver.getOneOptional<IMqttGatewayClientV1>('mqttgateway');
+        this._mqttGatewayClient = this._dependencyResolver.getOneOptional<IMqttGatewayClientV1>('mqttgateway');
     }
 
     public getCommandSet(): CommandSet {
@@ -66,28 +66,27 @@ export class SignalsController implements  IConfigurable, IReferenceable, IComma
         async.series([
             // Send to MQTT gateway
             (callback) => {
-                // if (this._mqttGatewayClient == null) {
-                //     callback();
-                // } else if (signal.device_id) {
-                //     this._mqttGatewayClient.sendSignal(
-                //         correlationId, signal.org_id, signal.device_id,
-                //         signal.type, signal.time.getTime() / 1000,
-                //         (err, result) => {
-                //             signal.sent = !!result;
-                //             callback(err);
-                //         }
-                //     );
-                // } else {
-                //     this._mqttGatewayClient.broadcastSignal(
-                //         correlationId, signal.org_id,
-                //         signal.type, signal.time.getTime() / 1000,
-                //         (err, result) => {
-                //             signal.sent = !!result;
-                //             callback(err);
-                //         }
-                //     );
-                // }
-                callback();
+                if (this._mqttGatewayClient == null) {
+                    callback();
+                } else if (signal.device_id) {
+                    this._mqttGatewayClient.sendSignal(
+                        correlationId, signal.org_id, signal.device_id,
+                        signal.type, signal.time.getTime() / 1000,
+                        (err, result) => {
+                            signal.sent = !!result;
+                            callback(err);
+                        }
+                    );
+                } else {
+                    this._mqttGatewayClient.broadcastSignal(
+                        correlationId, signal.org_id,
+                        signal.type, signal.time.getTime() / 1000,
+                        (err, result) => {
+                            signal.sent = !!result;
+                            callback(err);
+                        }
+                    );
+                }
             },
             (callback) => {
                 // Save the signal

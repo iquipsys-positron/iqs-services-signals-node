@@ -18,7 +18,7 @@ class SignalsController {
     setReferences(references) {
         this._dependencyResolver.setReferences(references);
         this._persistence = this._dependencyResolver.getOneRequired('persistence');
-        //!!this._mqttGatewayClient = this._dependencyResolver.getOneOptional<IMqttGatewayClientV1>('mqttgateway');
+        this._mqttGatewayClient = this._dependencyResolver.getOneOptional('mqttgateway');
     }
     getCommandSet() {
         if (this._commandSet == null)
@@ -35,28 +35,21 @@ class SignalsController {
         async.series([
             // Send to MQTT gateway
             (callback) => {
-                // if (this._mqttGatewayClient == null) {
-                //     callback();
-                // } else if (signal.device_id) {
-                //     this._mqttGatewayClient.sendSignal(
-                //         correlationId, signal.org_id, signal.device_id,
-                //         signal.type, signal.time.getTime() / 1000,
-                //         (err, result) => {
-                //             signal.sent = !!result;
-                //             callback(err);
-                //         }
-                //     );
-                // } else {
-                //     this._mqttGatewayClient.broadcastSignal(
-                //         correlationId, signal.org_id,
-                //         signal.type, signal.time.getTime() / 1000,
-                //         (err, result) => {
-                //             signal.sent = !!result;
-                //             callback(err);
-                //         }
-                //     );
-                // }
-                callback();
+                if (this._mqttGatewayClient == null) {
+                    callback();
+                }
+                else if (signal.device_id) {
+                    this._mqttGatewayClient.sendSignal(correlationId, signal.org_id, signal.device_id, signal.type, signal.time.getTime() / 1000, (err, result) => {
+                        signal.sent = !!result;
+                        callback(err);
+                    });
+                }
+                else {
+                    this._mqttGatewayClient.broadcastSignal(correlationId, signal.org_id, signal.type, signal.time.getTime() / 1000, (err, result) => {
+                        signal.sent = !!result;
+                        callback(err);
+                    });
+                }
             },
             (callback) => {
                 // Save the signal
